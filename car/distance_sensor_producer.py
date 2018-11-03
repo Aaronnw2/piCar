@@ -18,9 +18,9 @@ def maybe_update_vehicle_status(currentCarState):
     if path.exists("/tmp/distance_produce"):
         servicesUp += 1
     if currentCarState != servicesUp:
+        print('Setting car status: ' + str(servicesUp))
         SER.write(str(servicesUp).encode('utf-8'))
-        currentCarState = servicesUp
-    return currentCarState
+    return servicesUp
 
 try:
     currentCarState = 0
@@ -38,6 +38,7 @@ except Exception as err:
     traceback.print_tb(err)
 finally:
     try:
+        SER.write('0'.encode('utf-8'))
         os.remove('/tmp/distance_produce')
     except:
         print('No distance_produce file created')

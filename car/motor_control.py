@@ -46,7 +46,7 @@ def on_message(channel, method, properties, body):
 try:
     PI = pigpio.pi()
 
-    CONNECTION = pika.BlockingConnection(pika.ConnectionParameters('192.168.50.226'))
+    CONNECTION = pika.BlockingConnection(pika.ConnectionParameters('192.168.50.238'))
     CHANNEL = CONNECTION.channel()
     CHANNEL.queue_declare(queue='control')
 

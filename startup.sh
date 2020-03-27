@@ -1,34 +1,46 @@
 #!/bin/bash
 
+pkill -f 'python3 gamepad.py'
+pkill -f 'java -jar target/picar-proxy-server-1.0.0.jar'
+pkill -f 'python3 opencv_receive.py'
+killall -q ffmpeg
 
-#echo "Restarting rabbitmq..."
-#docker stop rabbit
-#docker wait rabbit
-#docker rm rabbit
-#docker run -d --hostname rabbit -p 8080:15672 -p 5672:5672 --name rabbit rabbitmq:3-management
+cd picar-proxy-server
+java -jar target/picar-proxy-server-1.0.0.jar > /dev/null 2>&1 &
 
-#echo "Waiting RabbitMq web interface to launch on 8080"
+ssh -T pi@192.168.50.69 << EOF
+  killall -q python3
+  killall -q raspivid
+  rm -f /tmp/distance_producer.pid
+  rm -f /tmp/motor_control_consumer.pid
+  rm -f /tmp/camera_producer.pid
+  rm -f /tmp/web_monitor.pid
+EOF
 
-#while ! curl --output /dev/null --silent --head --fail http://localhost:8080; do sleep 1 && echo -n .; done;
+cd ../server
 
-scp car/web_monitor.py pi@piCar.local:/home/pi
-scp car/motor_control.py pi@piCar.local:/home/pi
-scp car/distance_sensor_producer.py pi@piCar.local:/home/pi
+python3 gamepad.py &
+./stream_from_queue.sh display > /dev/null 2>&1 &
+cd ..
 
-ssh pi@piCar.local << EOF
-  echo "Stopping car scripts"
-  killall python3
-  echo "Starting car status monitor..."
+scp car/web_monitor.py \
+  car/motor_control_consumer.py \
+  car/distance_sensor_producer.py \
+  car/camera_producer.py \
+  car/local_start.sh \
+  pi@piCar.local:/home/pi
+
+ssh -T pi@192.168.50.69 << EOF
   python3 web_monitor.py > /dev/null 2>&1 &
-  echo "Starting distance sensors..."
+  pgrep -f 'python3 web_monitor.py' > /tmp/web_monitor.pid
   python3 distance_sensor_producer.py > /dev/null 2>&1 &
-  echo "Starting motor control..."
-  python3 motor_control.py > /dev/null 2>&1 &
-  echo "done."
+  pgrep -f 'python3 distance_sensor_producer.py' > /tmp/distance_producer.pid
+  python3 motor_control_consumer.py > /dev/null 2>&1 &
+  pgrep -f 'python3 motor_control_consumer.py' > /tmp/motor_control_consumer.pid
+  raspivid -t 0 -w 320 -h 240 -fps 30 -br 70 -co 50 -o - | nc 192.168.50.237 2222 > /dev/null 2>&1 &
+  pgrep -f 'raspivid' > /tmp/camera_producer.pid
 EOF
 
 echo "Waiting for piCar to launch"
-while ! curl --output /dev/null --silent --head --fail http://piCar.local:5000; do sleep 1 && echo -n .; done;
-echo -e "\npiCar is ready!"
-
-python3 server/gamepad.py
+while ! curl --output /dev/null --silent --head --fail http://192.168.50.69:5000; do sleep 1 && echo -n .; done;
+echo

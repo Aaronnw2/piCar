@@ -3,14 +3,13 @@
 #define SONAR_NUM     4 // Number or sensors.
 #define MAX_DISTANCE 400 // Max distance in cm.
 #define PING_INTERVAL 100 // Milliseconds between pings.
-#define RED_LED 10
-#define BLUE_LED 11
-#define GREEN_LED 12
+#define RED_LED 12
+#define GREEN_LED 11
 
 unsigned long pingTimer[SONAR_NUM]; // When each pings.
 unsigned int cm[SONAR_NUM]; // Store ping distances.
 uint8_t currentSensor = 0; // Which sensor is active.
-
+ 
 NewPing sonar[SONAR_NUM] = { // Sensor object array.
   NewPing(2, 3, MAX_DISTANCE),
   NewPing(5, 4, MAX_DISTANCE),
@@ -21,11 +20,7 @@ NewPing sonar[SONAR_NUM] = { // Sensor object array.
 void setup() {
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
-  pinMode(BLUE_LED, OUTPUT);
-  digitalWrite(RED_LED, HIGH);
-  digitalWrite(GREEN_LED, LOW);
-  digitalWrite(BLUE_LED, LOW);
-  Serial.begin(9600);
+  Serial.begin(115200);
   pingTimer[0] = millis() + 75; // First ping start in ms.
   for (uint8_t i = 1; i < SONAR_NUM; i++)
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
@@ -44,7 +39,6 @@ void loop() {
     }
   }
   maybeUpdateCarState();
-  delay(100);
 }
  
 void echoCheck() { // If ping echo, set distance to array.
@@ -65,20 +59,13 @@ void oneSensorCycle() { // Do something with the results.
 
 void maybeUpdateCarState() {
   if (Serial.available() > 0) {
-    int stateByte = Serial.parseInt();
-    Serial.read();
+    int stateByte = Serial.read();
     if (stateByte == 0) {
       digitalWrite(RED_LED, HIGH);
       digitalWrite(GREEN_LED, LOW);
-      digitalWrite(BLUE_LED, LOW);
-    } else if (stateByte == 1) {
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(BLUE_LED, HIGH);
-    } else if (stateByte == 2) {
+    } else {
       digitalWrite(RED_LED, LOW);
       digitalWrite(GREEN_LED, HIGH);
-      digitalWrite(BLUE_LED, LOW);
     }
   }
 }

@@ -1,5 +1,5 @@
 import pygame
-import pika
+import socket
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -32,14 +32,25 @@ class Controller:
         self.current_right = 0.0
         self.current_left_string = "0.0"
         self.current_right_string = "0.0"
-        self.con = pika.BlockingConnection(pika.ConnectionParameters(host="localhost", port=5672))
-        self.channel = self.con.channel()
-        self.channel.queue_declare(queue="control")
+        self.clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.clientsocket.connect(("192.168.50.237", 8080))
+        print("Connected")
+        self.clientsocket.send('PRODUCER,MOTOR_DATA'.encode())
+        print("Registered")
 
     def maybe_update_state(self, left_value, right_value):
         if self.__value_changed(left_value, right_value):
-            rounded_left_value = "%.2f" % round(left_value * .85, 2)
-            rounded_right_value = "%.2f" % round(right_value * .85, 2)
+            if left_value >= 0:
+                rounded_left_value = "+%.2f" % round(left_value * .85, 2)
+            else :
+                rounded_left_value = "%.2f" % round(left_value * .85, 2)
+            
+            if right_value >= 0:
+                rounded_right_value = "+%.2f" % round(right_value * .85, 2)
+            else:
+                rounded_right_value = "%.2f" % round(right_value * .85, 2)
+            
+            #print('Sending state: [{},{}]'.format(rounded_left_value, rounded_right_value))
             self.__send_updated_state(rounded_left_value, rounded_right_value)
             self.current_left = left_value
             self.current_right = right_value
@@ -47,29 +58,28 @@ class Controller:
             self.current_right_string = rounded_right_value
 
     def __send_updated_state(self, left_value, right_value):
-        message = "[{}, {}]".format(left_value, right_value)
-        self.channel.basic_publish(exchange="",
-                                   routing_key="control",
-                                   body=message)
+        message = "[{},{}]".format(left_value, right_value)
+        self.clientsocket.send(str.encode(message))
 
     def __value_changed(self, left_value, right_value):
         return abs(self.current_left - left_value) > .05 or abs(
             self.current_right - right_value) > .05
 
     def close(self):
-        self.con.close()
+        self.clientsocket.close()
 
-SIZE = [550, 700]
+SIZE = [550, 400]
 SCREEN = pygame.display.set_mode(SIZE)
 DONE = False
 CLOCK = pygame.time.Clock()
 
-pygame.display.set_caption("Gamepad Input")
+pygame.display.set_caption("WAITING FOR CONNECTION...")
 pygame.font.init()
 pygame.joystick.init()
 
 TEXT_PRINT = TextPrint()
 CONTROLLER = Controller()
+pygame.display.set_caption("Gamepad Input")
 
 while DONE is False:
     for event in pygame.event.get():

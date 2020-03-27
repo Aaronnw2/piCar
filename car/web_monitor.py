@@ -5,9 +5,14 @@ app = Flask(__name__)
 
 @app.route("/")
 def control_monitor():
-    if not path.exists("/tmp/control_consume"):
+    motor_pid = open("/tmp/motor_control_consumer.pid", "r").read().rstrip()
+    if not path.exists("/proc/" + motor_pid):
         return "down", 500
-    if not path.exists("/tmp/distance_produce"):
+    distance_pid = open("/tmp/distance_producer.pid", "r").read().rstrip()
+    if not path.exists("/proc/" + distance_pid):
+        return "down", 500
+    camera_pid = open("/tmp/camera_producer.pid", "r").read().rstrip()
+    if not path.exists("/proc/" + camera_pid):
         return "down", 500
     return "up", 200
 

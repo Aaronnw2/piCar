@@ -138,3 +138,6 @@ pip-selfcheck.json
 
 
 # End of https://www.gitignore.io/api/code,python
+
+picar-proxy-server/.classpath
+picar-proxy-server/.project

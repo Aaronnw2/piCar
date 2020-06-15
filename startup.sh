@@ -20,7 +20,7 @@ EOF
 cd ../server
 
 python3 gamepad.py &
-./stream_from_queue.sh display > /dev/null 2>&1 &
+./stream_from_queue.sh train > /dev/null 2>&1 &
 cd ..
 
 scp car/web_monitor.py \

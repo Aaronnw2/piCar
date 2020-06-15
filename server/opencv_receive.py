@@ -3,7 +3,7 @@
 import subprocess as sp
 import argparse
 #import track
-#import train
+import train
 import display
 
 FFMPEG_BIN = "ffmpeg"
@@ -26,5 +26,7 @@ mode = args["mode"]
 #    train.start_training_capture(pipe)
 if mode == 'display':
     display.display_video(pipe)
+elif mode == 'train':
+    train.gather_data(pipe)
 else:
     print('Must give mode parameter (-m, --mode) of either train or track')

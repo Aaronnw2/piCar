@@ -2,6 +2,7 @@
 """ Utility methods for training and detection """
 import csv
 import numpy
+import cv2
 
 def read_image(inpipe):
     """ Reads a new frame from the stream """
@@ -21,3 +22,9 @@ def write_data_records(records):
         writer.writeheader()
         for record in records:
             writer.writerow({'file': record['file'], 'boxes': record['boxes']})
+
+def auto_canny(image, median, sigma=0.33):
+	lower = int(max(0, (1.0 - sigma) * median))
+	upper = int(min(255, (1.0 + sigma) * median))
+	edge = cv2.Canny(image, lower, upper)
+	return edge

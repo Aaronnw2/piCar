@@ -50,7 +50,6 @@ class Controller:
             else:
                 rounded_right_value = "%.2f" % round(right_value * .85, 2)
             
-            #print('Sending state: [{},{}]'.format(rounded_left_value, rounded_right_value))
             self.__send_updated_state(rounded_left_value, rounded_right_value)
             self.current_left = left_value
             self.current_right = right_value
@@ -59,6 +58,7 @@ class Controller:
 
     def __send_updated_state(self, left_value, right_value):
         message = "[{},{}]".format(left_value, right_value)
+        # print('Sending state: ' + message)
         self.clientsocket.send(str.encode(message))
 
     def __value_changed(self, left_value, right_value):

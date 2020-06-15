@@ -34,8 +34,11 @@ def map_to_dutycycle(value):
     return 255 * value
 
 def on_message(body):
-    set_left_motors(float(body[1:5]))
-    set_right_motors(float(body[7:11]))
+    try:
+        set_left_motors(float(body[1:5]))
+        set_right_motors(float(body[7:11]))
+    except Exception as err:
+        print('Error processing message: ' + body.decode())
 
 try:
     PI = pigpio.pi()
@@ -47,10 +50,10 @@ try:
     print("Registered")
     while True:
         data = serversocket.recv(13)
-        # print("received data:", data)
+        print("received data:", data.decode())
         on_message(data)
 except Exception as err:
-    print('Error starting controller')
+    print('Error encountered running motor controller')
     traceback.print_tb(err)
 finally:
     serversocket.close()

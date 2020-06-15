@@ -47,7 +47,7 @@ public class ServerApp {
                  @Override
                  public void initChannel(SocketChannel ch) throws Exception {
                      ChannelPipeline p = ch.pipeline();
-                     //p.addLast(new LoggingHandler(LogLevel.INFO));
+                     p.addLast(new LoggingHandler(LogLevel.INFO));
                      p.addLast(new StringDecoder());
                      p.addLast(serverHandler);
                  }
